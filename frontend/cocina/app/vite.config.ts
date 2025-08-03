@@ -23,6 +23,7 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
+      'cocina.docker.salchimonster.com',
       'cocina.127.0.0.1.nip.io',   // ← el que necesitas
     ],
 
