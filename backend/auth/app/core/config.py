@@ -1,0 +1,8 @@
+import os
+
+SECRET_KEY = "secret_jwt_key_123456"  # Debe ser más segura en producción
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+GOOGLE_CLIENT_ID      = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET  = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI   = os.getenv("GOOGLE_REDIRECT_URI")

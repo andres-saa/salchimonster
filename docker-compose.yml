@@ -1,0 +1,110 @@
+services:
+  # ---------- backend ----------
+  api_auth:
+    build:
+      context: ./backend/auth
+      target: prod            # etapa prod con Gunicorn
+    image: api/auth:latest
+    environment:
+      TZ: America/Bogota
+      PYTHONHASHSEED: "0"
+    restart: unless-stopped
+
+
+  api_cocina:
+    build:
+      context: ./backend/cocina
+      target: prod            # etapa prod con Gunicorn
+    image: api/cocina:latest
+    environment:
+      TZ: America/Bogota
+      PYTHONHASHSEED: "0"
+    restart: unless-stopped
+
+  
+  api_gestion:
+    build:
+      context: ./backend/gestion
+      target: prod            # etapa prod con Gunicorn
+    image: api/gestion:latest
+    environment:
+      TZ: America/Bogota
+      PYTHONHASHSEED: "0"
+    restart: unless-stopped
+
+  api_mensajeria:
+    build:
+      context: ./backend/mensajeria
+      target: prod            # etapa prod con Gunicorn
+    image: api/mensajeria:latest
+    environment:
+      TZ: America/Bogota
+      PYTHONHASHSEED: "0"
+    restart: unless-stopped
+
+  api_pagina:
+    build:
+      context: ./backend/pagina
+      target: prod            # etapa prod con Gunicorn
+    image: app/pagina:latest
+    environment:
+      TZ: America/Bogota
+      PYTHONHASHSEED: "0"
+    restart: unless-stopped
+    # ports:
+    #   - "9000:80"             # quítalo si lo expones detrás de un proxy
+
+  # ---------- frontend ----------
+  cocina:                        # antes “frontend”
+    build:
+      context: ./frontend/cocina
+      target: dev            # etapa prod con Nginx + estáticos
+    image: app/cocina:latest
+    volumes:
+      - ./frontend/cocina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # <-- sangría correcta
+    restart: unless-stopped
+    # ports:
+    #   - "80:80"               # publica directamente la SPA
+
+  gestion:                        # antes “frontend”
+    build:
+      context: ./frontend/gestion
+      target: dev            # etapa prod con Nginx + estáticos
+    image: app/gestion:latest
+    volumes:
+      - ./frontend/gestion/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # <-- sangría correcta
+    restart: unless-stopped
+    # ports:
+    #   - "80:80"               # publica directamente la SPA
+
+  pagina:                        # antes “frontend”
+    build:
+      context: ./frontend/pagina
+      target: dev            # etapa prod con Nginx + estáticos
+    image: app/pagina:latest
+    volumes:
+      - ./frontend/pagina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # <-- sangría correcta
+    restart: unless-stopped
+    # ports:
+    #   - "80:80"               # publica directamente la SPA
+
+
+  proxy:
+      image: nginx:1.27-alpine
+      container_name: proxy
+      ports:
+        - "80:80"
+        - "443:443"      # si usas TLS
+      volumes:
+        - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro
+        - ./nginx_dev/certs:/etc/nginx/certs:ro
+        - type: bind               # ← indica que es un bind-mount
+          source: ./nginx_dev/proxy_params
+          target: /etc/nginx/proxy_params
+          read_only: true
+
+      # depends_on:
+      #   - auth
+      #   - web1
+      #   - web2
+      # restart: unless-stopped

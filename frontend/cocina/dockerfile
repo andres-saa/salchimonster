@@ -1,0 +1,32 @@
+# ---------- etapa base ----------
+    FROM node:20-alpine AS base
+    WORKDIR /app
+    
+    # ---------- etapa dev ----------
+    FROM base AS dev
+    # 1️⃣ Dependencias (aprovecha caché si sólo cambia package*.json)
+    COPY ./app/package*.json ./
+    RUN npm install
+    # 2️⃣ Código fuente
+    COPY ./app .
+    EXPOSE 5173
+    CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    
+    # ---------- etapa builder ----------
+    FROM base AS builder
+    COPY ./app/package*.json ./
+    RUN npm install
+    # 2️⃣ Código fuente
+    COPY ./app .
+    RUN npm run build           # genera /app/dist
+    
+    # ---------- etapa prod ----------
+    FROM nginx:1.27-alpine AS prod
+    
+ 
+    # Copio los estáticos al doc-root correcto
+    COPY --from=builder ./app/dist /usr/share/nginx/html
+    
+    # 80 ya está expuesto por la imagen base
+    CMD ["nginx", "-g", "daemon off;"]
+    

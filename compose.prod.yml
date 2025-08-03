@@ -1,0 +1,129 @@
+version: "3.9"
+
+##############################
+#      RED Y VARIABLES       #
+##############################
+# (opcional) declara una red común si quieres más control
+# networks:
+#   app_net:
+#     driver: bridge
+
+services:
+  ###########################################################################
+  #                              BACKEND API                                #
+  ###########################################################################
+  api_auth:
+    build:
+      context: ./backend/auth
+      target: prod            # Dockerfile ➜ stage prod (Gunicorn)
+    image: app/api-auth:latest
+    environment:
+      - TZ=America/Bogota
+      - PYTHONHASHSEED=0
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  api_cocina:
+    build:
+      context: ./backend/cocina
+      target: prod
+    image: app/api-cocina:latest
+    environment:
+      - TZ=America/Bogota
+      - PYTHONHASHSEED=0
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  api_gestion:
+    build:
+      context: ./backend/gestion
+      target: prod
+    image: app/api-gestion:latest
+    environment:
+      - TZ=America/Bogota
+      - PYTHONHASHSEED=0
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  api_mensajeria:
+    build:
+      context: ./backend/mensajeria
+      target: prod
+    image: app/api-mensajeria:latest
+    environment:
+      - TZ=America/Bogota
+      - PYTHONHASHSEED=0
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  api_pagina:
+    build:
+      context: ./backend/pagina
+      target: prod
+    image: app/api-pagina:latest
+    environment:
+      - TZ=America/Bogota
+      - PYTHONHASHSEED=0
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  ###########################################################################
+  #                              FRONTENDS SPA                              #
+  ###########################################################################
+  cocina:
+    build:
+      context: ./frontend/cocina
+      target: prod            # Dockerfile ➜ stage prod (Nginx + estáticos)
+    image: app/front-cocina:latest
+    volumes:
+      - ./frontend/cocina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  gestion:
+    build:
+      context: ./frontend/gestion
+      target: prod
+    image: app/front-gestion:latest
+    volumes:
+      - ./frontend/gestion/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  pagina:
+    build:
+      context: ./frontend/pagina
+      target: prod
+    image: app/front-pagina:latest
+    volumes:
+      - ./frontend/pagina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    # networks: ["app_net"]
+
+  ###########################################################################
+  #                             REVERSE PROXY                               #
+  ###########################################################################
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: proxy
+    ports:
+      - "80:80"
+      - "443:443"      # comenta si todavía no usas TLS
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro        # vhosts *.conf
+      - ./nginx/certs:/etc/nginx/certs:ro          # llaves / certs
+      - type: bind
+        source: ./nginx/proxy_params
+        target: /etc/nginx/proxy_params
+        read_only: true
+    depends_on:
+      - api_auth
+      - api_cocina
+      - api_gestion
+      - api_mensajeria
+      - api_pagina
+      - cocina
+      - gestion
+      - pagina
+    restart: unless-stopped
+    # networks: ["app_net"]

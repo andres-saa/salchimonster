@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+passlib[bcrypt]
+python-jose
+psycopg2-binary
+dotenv
+python-multipart
+authlib 
+google-auth 
+google-auth-oauthlib 
+httpx
+itsdangerous
+fastapi[standard]
