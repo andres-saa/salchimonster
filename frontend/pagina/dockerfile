@@ -1,32 +1,42 @@
 # ---------- etapa base ----------
     FROM node:20-alpine AS base
     WORKDIR /app
+    # Las tres siguientes líneas permiten reproducibilidad y evitan problemas de huso horario
+    ENV TZ=America/Bogota
+    ENV NODE_ENV=production
+    # ENV NUXT_TELEMETRY_DISABLED=1   # opcional, evita el prompt de telemetría
     
     # ---------- etapa dev ----------
+
+
     FROM base AS dev
     # 1️⃣ Dependencias (aprovecha caché si sólo cambia package*.json)
-    COPY ./app/package*.json ./
+    COPY ./app/package.json ./
     RUN npm install
     # 2️⃣ Código fuente
     COPY ./app .
-    EXPOSE 5173
-    CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    EXPOSE 3000
+    CMD ["npm", "run", "dev", "--", "--host"]
+
+
+
+
     
-    # ---------- etapa builder ----------
     FROM base AS builder
-    COPY ./app/package*.json ./
-    RUN npm install
-    # 2️⃣ Código fuente
-    COPY ./app .
-    RUN npm run build           # genera /app/dist
+        
+    COPY ./app/package.json ./
+    RUN npm install         
+    COPY . ./app
+    RUN npm run build
     
     # ---------- etapa prod ----------
-    FROM nginx:1.27-alpine AS prod
-    
- 
-    # Copio los estáticos al doc-root correcto
-    COPY --from=builder ./app/dist /usr/share/nginx/html
-    
-    # 80 ya está expuesto por la imagen base
-    CMD ["nginx", "-g", "daemon off;"]
+    FROM node:20-alpine AS prod
+
+    ENV NODE_ENV=production
+    # 1️⃣ Copio sólo lo mínimo para ejecutar el servidor Nuxt
+    COPY --from=builder /app/.output ./.output
+    COPY --from=builder /app/node_modules ./node_modules
+    # 2️⃣ Si usas variables (por ejemplo claves API) decláralas con ENV o en docker-compose
+    EXPOSE 3000
+    CMD ["node", ".output/server/index.mjs"]
     

@@ -77,17 +77,13 @@ services:
     # ports:
     #   - "80:80"               # publica directamente la SPA
 
-  pagina:                        # antes “frontend”
+  pagina:
     build:
       context: ./frontend/pagina
-      target: dev            # etapa prod con Nginx + estáticos
-    image: app/pagina:latest
+      target: dev
     volumes:
       - ./frontend/pagina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # <-- sangría correcta
-    restart: unless-stopped
-    # ports:
-    #   - "80:80"               # publica directamente la SPA
-
+    
 
   proxy:
       image: nginx:1.27-alpine

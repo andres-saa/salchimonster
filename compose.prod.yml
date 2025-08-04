@@ -90,14 +90,15 @@ services:
     restart: unless-stopped
     # networks: ["app_net"]
 
-  pagina:
-    build:
-      context: ./frontend/pagina
-      target: prod
-    image: app/front-pagina:latest
-    volumes:
-      - ./frontend/pagina/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    restart: unless-stopped
+  pagina:                       #  ← ahora Nuxt
+      build:
+        context: ./frontend/pagina
+        target: prod             # Dockerfile ➜ etapa prod (Node + .output)
+      image: app/front-pagina:latest
+      environment:
+        - TZ=America/Bogota
+        - NODE_ENV=production
+      restart: unless-stopped
     # networks: ["app_net"]
 
   ###########################################################################
